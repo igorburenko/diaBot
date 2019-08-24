@@ -24,6 +24,9 @@ btn_main_menu = telebot.types.InlineKeyboardButton(text=u"\U0001F519 Старт�
 btn_my_coeff = telebot.types.InlineKeyboardButton(text=u"\U0001F374 Мои коэффициенты", callback_data="my_coeff")
 btn_set_new_coef = telebot.types.InlineKeyboardButton(text=u"\U00002795 Добавить новый", callback_data="set_new_coef")
 btn_delete_coef = telebot.types.InlineKeyboardButton(text=u"\U0000274C Удалить коэфициент", callback_data="delete_coef")
+btn_write_to_dev = telebot.types.InlineKeyboardButton(text=u"\U0001F4E8Написать разработчику", url="https://t.me/Burenko")
+btn_how_to_use = telebot.types.InlineKeyboardButton(text=u"\U0001F4FAКак пользоваться", url="https://youtube.com")
+btn_azbuka = telebot.types.InlineKeyboardButton(text=u"\U0001F4DAАзбука Диаклуба", url="https://juri.dia-club.ru")
 
 
 emoje1 = '\U0000274C'

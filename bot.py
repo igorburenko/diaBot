@@ -1,18 +1,30 @@
 import telebot
+import os
+from telebot.types import Message
 from db_foo import *
-# from settings import *
 import re
 from calculate import *
 from buttons import *
+from keyboards import KeyboardEditTimeCoef, KeyboardWeight, KeyboardMyMenu
 from pprint import pprint
-from telebot.types import Message
-from keyboards import Keyboard, KeyboardEditTimeCoef, KeyboardWeight, KeyboardMyMenu
-import os
 
 TOKEN = os.getenv("TOKEN")
 
-
 bot = telebot.TeleBot(TOKEN)
+
+@bot.message_handler(commands=['test'])
+def test_msg(message: Message):
+    timezone = load_timezone_from_db(message.chat.id)
+    cur_time = hour_from_unix_time(time.time(), timezone=timezone)
+    # cur_time = 1
+    coef = load_coef_smart_time_from_db(message.chat.id, cur_time)
+    print(coef)
+    k1 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][1], coef[0][1]), 2)
+    k2 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][2], coef[0][2]), 2)
+
+    # print(k1, k2)
+    delete_answer(message.chat.id, message.message_id)
+
 
 
 # при команде старт
@@ -70,6 +82,29 @@ def message_sender(chatId, messageId, replyMarkup, txt1='', txt2=''):
         print('Somthing went wrong')
 
 
+@bot.callback_query_handler(func=lambda call: 'help' in call.data)
+def help_menu(call):
+    """Меню хелП"""
+    text = ('\U00002757Перед использованием бота обязательно нужно установить коэфициенты к1 и к2. ' \
+           'Эти данные индивидуальны для каждого человека. ' \
+           'Как их вычислить вы узнаете в 3-й главе "Азбуки Диаклуба"\U0001F4DA.\n\n' \
+    
+           'Для понимания как управлять ботом нажмите кнопку "Как пользоваться"\U0001F4FA\n\n' \
+    
+           'Основные алгоритмы расчета дозы инсулина и идея создания программы для расчета ' \
+           'принадлежат Юрию Кадомскому aka Juris\U0001F64F\n\n' \
+    
+           'Основа базы продуктов взята у автора программы DiaCalc Константина Топорова \naka Connie')
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    keyboard.add(btn_azbuka)
+    keyboard.add(btn_how_to_use)
+    keyboard.add(btn_write_to_dev)
+    keyboard.add(btn_main_menu)
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                          text=text, reply_markup=keyboard)
+
+
+
 @bot.callback_query_handler(func=lambda call: 'serch_in_products' in call.data)
 def execute_button_search(call):
     """Отработчик кнопки поиска продукта"""
@@ -103,14 +138,7 @@ def search_product_from_message(message: Message):
         print('oops')
 
 
-@bot.message_handler(commands=['test'])
-def test_msg(message: Message):
-    my_menu = load_my_menu(tele_id=message.chat.id)
 
-    delete_answer(message.chat.id, message.message_id)
-
-    # set_weight_in_db('19', '67', '15')
-    # add_new_prod_to_menu(message.chat.id, '69')
 
 
 @bot.callback_query_handler(func=lambda call: 'doza' in call.data)
@@ -132,6 +160,9 @@ def execute_rashet_doza(call):
     """Обработчик кнопки расчитать. Расчитывает дозу инсулина по продуктам в моем меню"""
     try:
         my_menu = load_my_menu(tele_id=call.message.chat.id)
+        if my_menu == []:
+            bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\nОшибка!\nДобавьте продукт\nв ваше меню!')
+            return
         data_for_calculate = []
         for i in my_menu:
             cell_data_calculate = []
@@ -140,19 +171,33 @@ def execute_rashet_doza(call):
                 bgu_v_menu_konkretnogo_producta = i[1]/100*p # Расчитываем по очереди БЖУ в меню исходя из массы продукта
                 cell_data_calculate.append(bgu_v_menu_konkretnogo_producta) #Добавляем в список БЖУ - в нем 3 элемента для конкр продукта
             data_for_calculate.append(cell_data_calculate)#Добавляем в общий список[списков] расчитанных по массе БЖУ
-        list = [sum(i) for i in zip(*data_for_calculate)]  #суммироем бжу получаем список 3 элемента[Б,Ж,У] всего меню
+        bgu = [sum(i) for i in zip(*data_for_calculate)]  #суммироем бжу получаем список 3 элемента[Б,Ж,У] всего меню
         massa_menu = calculate_mass_my_menu(my_menu)
-        timezone = load_timezone_from_db(call.message.chat.id)
-        cur_time = hour_from_unix_time(time.time(), timezone=timezone)
+        coef = smart_load_coef(call.message.chat.id)
+        calc = Calculator(prot=bgu[0], fat=bgu[1], carbo=bgu[2], weight=massa_menu, k1=coef[0], k2=coef[1])
+        dose = calc.calculate_dose()
+        if dose is None:
+            bot.answer_callback_query(call.id, show_alert=True,
+                                      text=f'\U00002757Расчет дозы не возможен.\n'
+                                      f'Установите коэфициенты К1 и К2 в настройках')
+        else:
+            bot.answer_callback_query(call.id, show_alert=True, text=f'Доза инсулина для вашего меню \n{dose} ед.\n'
+            f'k1={coef[0]}, k2={coef[1]}')
+    except TypeError:
+        bot.answer_callback_query(call.id, show_alert=True, text=f'Проверьте установленный вес во всех продуктах меню')
+    except Exception as e:
+        print(f'Ошибка - {e}')
 
-        all_coef = read_all_coefficient_from_db(call.message.chat.id)
-        cur_coef = coef_selection_from_time(all_coef, cur_time)
 
-        calc = Calculator(prot=list[0], fat=list[1], carbo=list[2], weight=massa_menu, k1=cur_coef[1], k2=cur_coef[2])
-        dose = round(calc.calculate_dose()/(massa_menu/100), 1)
-        bot.answer_callback_query(call.id, show_alert=True, text=f'Доза инсулина для вашего меню \n{dose} ед.')
-    except:
-        print('oopp')
+def smart_load_coef(teleid):
+    timezone = load_timezone_from_db(teleid)
+    cur_time = hour_from_unix_time(time.time(), timezone=timezone)
+    # cur_time = 1
+    coef = load_coef_smart_time_from_db(teleid, cur_time)
+    # print(coef)
+    k1 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][1], coef[0][1]), 2)
+    k2 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][2], coef[0][2]), 2)
+    return k1, k2
 
 
 @bot.callback_query_handler(func=lambda call: 'moi_menu' in call.data)
@@ -201,6 +246,7 @@ def delete_product_from_menu(call):
     try:
         call_dat = call.data.split(',')
         delete_product_from_my_menu_db(call.message.chat.id, call_dat[1])
+        bot.answer_callback_query(call.id, show_alert=False, text=f'Продукт удален из меню')
         my_menu(call)
     except:
         print('oops')
@@ -211,7 +257,7 @@ def delete_my_menu(call):
     """стирает мое меню"""
     try:
         delete_menu_from_db(call.message.chat.id)
-        bot.answer_callback_query(call.id, show_alert=True, text=f'Меню удалено')
+        bot.answer_callback_query(call.id, show_alert=False, text=f'Меню удалено')
         my_menu(call)
     except:
         print('oops')
@@ -307,6 +353,7 @@ def set_weight(call):
     try:
         call_dat = call.data.split(',')
         set_weight_in_db(call.message.chat.id, call_dat[2], call_dat[1])
+        bot.answer_callback_query(call.id, show_alert=False, text=f'Установлен вес {call_dat[1]} гр.')
         if call_dat[3] == 'my_menu':
             my_menu(call)
         elif call_dat[3] == 'prod_base':
@@ -361,7 +408,7 @@ def timezone_execute(call):
         user_time = int(re.findall(r'\w+$', call.data)[0])
         timezone = timezone_calculate(user_time, call.message.edit_date)
         sign = '+' if timezone > 0 else ''
-        bot.answer_callback_query(call.id, show_alert=True, text=f'Часовой пояс {sign}{timezone}\nустановлен')
+        bot.answer_callback_query(call.id, show_alert=False, text=f'Часовой пояс {sign}{timezone}\nустановлен')
         set_timezone(call.message.chat.id, timezone)
         setup_menu(call)
     except:
@@ -443,10 +490,10 @@ def check_coef_in_database(call):
         times = int(re.findall(r'\w+$', call.data)[0])
         if cell_in_table(load_base_uid(call.message.chat.id), times) is None:
             add_coefficient(call.message.chat.id, times)
-            bot.answer_callback_query(call.id, show_alert=True,
+            bot.answer_callback_query(call.id, show_alert=False,
                                   text=f'Новое время добавлено, теперь отредактируйте коэфициенты в меню Мои Коэфициенты')
         else:
-            bot.answer_callback_query(call.id, show_alert=True,
+            bot.answer_callback_query(call.id, show_alert=False,
                                   text=f'На это время уже установлены коэфициенты. Редактируйте их в меню Мои Коэфициенты')
         my_coef_menu(call)
     except:
@@ -486,7 +533,7 @@ def delete_coef_action(call):
         delete_from_db(id_coef[0])
         keyboard = telebot.types.InlineKeyboardMarkup()
         keyboard.add(btn_main_menu, btn_setup)
-        bot.answer_callback_query(call.id, show_alert=True, text=f'Коэфициенты для {time_for_del}:oo удалены')
+        bot.answer_callback_query(call.id, show_alert=False, text=f'Коэфициенты для {time_for_del}:oo удалены')
         my_coef_menu(call)
     except:
         print('Somthing went wrong')
@@ -525,7 +572,7 @@ def modify_coefficient(call):
                                            f'Их можно изменить в меню Мои Коэффициенты')
                 my_coef_menu(call)
                 return
-        bot.answer_callback_query(call.id, show_alert=True,
+        bot.answer_callback_query(call.id, show_alert=False,
                                   text=f'Коэфициент {co_edit[2]} для {co_edit[1]}oo\nустановлен на {co_edit[3]}')
         add_coefficient(call.message.chat.id, co_edit[1], co_edit[2], co_edit[3])
         my_coef_menu(call)

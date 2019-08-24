@@ -4,14 +4,13 @@ import time
 from pprint import pprint
 import os
 
-DB = os.getenv("DATABASE")
 
+DB = os.getenv("DATABASE")
 DATABASE = DB.split(',')
 db_conn_data = dict(dbname=str(DATABASE[0]),
                     user=str(DATABASE[1]),
                     password=str(DATABASE[2]),
                     host=str(DATABASE[3]))
-
 
 
 def add_new_user(userid):
@@ -258,3 +257,35 @@ def serch_product_by_name(request):
     answer = connect_to_db_and_action(action, True)
     answer.sort(key = lambda row: row[1])
     return answer
+
+
+def load_coef_smart_time_from_db(tele_id, cur_time):
+        """
+        Подбирает пару ближайших коэфициентов по текущему времени смарт
+        """
+        userid = load_base_uid(tele_id)
+        high_time = load_coef_from_db_for_calculate(userid, cur_time, True)
+        low_time = load_coef_from_db_for_calculate(userid, cur_time, False)
+        if high_time == []:
+            cur_time -= 24
+            high_time = load_coef_from_db_for_calculate(userid, cur_time, True)
+        elif low_time == []:
+            cur_time += 24
+            low_time = load_coef_from_db_for_calculate(userid, cur_time, False)
+        high_time.append(low_time[0])
+        return high_time
+
+
+
+
+def load_coef_from_db_for_calculate(userid, cur_time, flag_high):
+    if flag_high:
+        action1 = 'SELECT time, k1, k2 FROM coefficients WHERE userid = {} AND time >= {} ORDER BY time ASC LIMIT 1'.format(userid,
+                                                                                                                    cur_time)
+        coef = connect_to_db_and_action(action1, True)
+    else:
+        action2 = 'SELECT time, k1, k2 FROM coefficients WHERE userid = {} AND time <= {} ORDER BY time DESC LIMIT 1'.format(userid,
+                                                                                                                     cur_time)
+        coef = connect_to_db_and_action(action2, True)
+    return coef
+

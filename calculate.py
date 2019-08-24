@@ -1,32 +1,15 @@
 from db_foo import load_my_menu
 
-def coef_selection_from_time(coef:list, cur_time:int):
-    """Выбирает время ближайшего коэфициента"""
-    # print(coef, cur_time)
-    try:
-            best_time = 25
-            for i in coef:
-                first = abs(i[0] - cur_time)
-                second = abs(best_time - cur_time)
-                if first > 12:
-                    first = abs(first - 24)
-                if second > 12:
-                    second = abs(second - 24)
-                if first < second:
-                    best_time = i[0]
-                    coef = i
-            if best_time > 23:
-                best_time -= 24
 
-            # print(coef)
-            return coef
-            # print(best_time)
-    except:
-        print('oops')
-
-
-
-
+def map_from_arduino(x, in_min, in_max, out_min, out_max):
+    """функция мап как на ардуино. возвращает одно значение нужного коэфициента"""
+    if in_min > in_max:
+        in_max += 24
+    if x < in_min:
+        x += 24
+    if out_min == out_max:
+        return out_min
+    return ((x-in_min) * (out_max-out_min) / (in_max-in_min) + out_min)
 
 
 def calculate_mass_my_menu(menu):
@@ -50,10 +33,15 @@ class Calculator():
         self.glik_index = 50
 
     def calculate_dose(self):
+        if self.k1 is None or self.k2 is None:
+            return None
+        # print(self.weight)
         fast_carb_comp = self.weight * ((self.carbo / 100) * (self.glik_index / 100) / self.bread_unit) * self.k1
         slow_carb_comp = self.weight * (
                     (self.carbo / 100) * ((100 - self.glik_index) / 100) / self.bread_unit) * self.k1
         prot_comp = self.weight * (self.prot / 100) * (4.1 / 100) * self.k2
         fat_comp = self.weight * (self.fat / 100) * (9.3 / 100) * self.k2
+        # print(self.k1)
         doza = fast_carb_comp + slow_carb_comp + prot_comp + fat_comp
+        doza = round(doza / (self.weight / 100), 1)
         return doza
