@@ -1,4 +1,4 @@
-from db_foo import load_my_menu
+from db_foo import load_my_menu, load_product_properties
 
 
 def map_from_arduino(x, in_min, in_max, out_min, out_max):
@@ -19,6 +19,21 @@ def calculate_mass_my_menu(menu):
         return list[1]
     except:
         print('oops')
+
+
+def calculate_bgu_from_menu(my_menu):
+    """Расчитывает общее число БЖУ по моему меню"""
+    data_for_calculate = []
+    for i in my_menu:
+        cell_data_calculate = []
+        prod_prop = load_product_properties(i[0])  # Получаем БЖУ продуктов из базы списком кортежей
+        for p in prod_prop[0]:
+            bgu_v_menu_konkretnogo_producta = i[1] / 100 * p  # Расчитываем по очереди БЖУ в меню по массе продукта
+            cell_data_calculate.append(
+                bgu_v_menu_konkretnogo_producta)  # Добавляем в список БЖУ - в нем 3 элемента для конкр продукта
+        data_for_calculate.append(cell_data_calculate)  # Добавляем в общий список[списков] расчитанных по массе БЖУ
+    bgu = [sum(i) for i in zip(*data_for_calculate)]  # суммироем бжу получаем список 3 элемента[Б,Ж,У] всего меню
+    return bgu
 
 
 class Calculator():

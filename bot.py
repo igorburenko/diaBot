@@ -1,8 +1,9 @@
 import telebot
 import os
+import re
+import help
 from telebot.types import Message
 from db_foo import *
-import re
 from calculate import *
 from buttons import *
 from keyboards import KeyboardEditTimeCoef, KeyboardWeight, KeyboardMyMenu
@@ -14,15 +15,7 @@ bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['test'])
 def test_msg(message: Message):
-    timezone = load_timezone_from_db(message.chat.id)
-    cur_time = hour_from_unix_time(time.time(), timezone=timezone)
-    # cur_time = 1
-    coef = load_coef_smart_time_from_db(message.chat.id, cur_time)
-    print(coef)
-    k1 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][1], coef[0][1]), 2)
-    k2 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][2], coef[0][2]), 2)
 
-    # print(k1, k2)
     delete_answer(message.chat.id, message.message_id)
 
 
@@ -85,16 +78,7 @@ def message_sender(chatId, messageId, replyMarkup, txt1='', txt2=''):
 @bot.callback_query_handler(func=lambda call: 'help' in call.data)
 def help_menu(call):
     """Меню хелП"""
-    text = ('\U00002757Перед использованием бота обязательно нужно установить коэфициенты к1 и к2. ' \
-           'Эти данные индивидуальны для каждого человека. ' \
-           'Как их вычислить вы узнаете в 3-й главе "Азбуки Диаклуба"\U0001F4DA.\n\n' \
-    
-           'Для понимания как управлять ботом нажмите кнопку "Как пользоваться"\U0001F4FA\n\n' \
-    
-           'Формула расчета дозы инсулина и идея создания программы для расчета ' \
-           'принадлежат Юрию Кадомскому aka Juris\U0001F64F\n\n' \
-    
-           'Основа базы продуктов взята у автора программы DiaCalc Константина Топорова \naka Connie')
+    text = help.text
     keyboard = telebot.types.InlineKeyboardMarkup()
     keyboard.add(btn_azbuka)
     keyboard.add(btn_how_to_use)
@@ -163,15 +147,7 @@ def execute_rashet_doza(call):
         if my_menu == []:
             bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\nОшибка!\nДобавьте продукт\nв ваше меню!')
             return
-        data_for_calculate = []
-        for i in my_menu:
-            cell_data_calculate = []
-            prod_prop = load_product_properties(i[0]) #Получаем БЖУ продуктов из базы списком кортежей
-            for p in prod_prop[0]:
-                bgu_v_menu_konkretnogo_producta = i[1]/100*p # Расчитываем по очереди БЖУ в меню исходя из массы продукта
-                cell_data_calculate.append(bgu_v_menu_konkretnogo_producta) #Добавляем в список БЖУ - в нем 3 элемента для конкр продукта
-            data_for_calculate.append(cell_data_calculate)#Добавляем в общий список[списков] расчитанных по массе БЖУ
-        bgu = [sum(i) for i in zip(*data_for_calculate)]  #суммироем бжу получаем список 3 элемента[Б,Ж,У] всего меню
+        bgu = calculate_bgu_from_menu(my_menu)
         massa_menu = calculate_mass_my_menu(my_menu)
         coef = smart_load_coef(call.message.chat.id)
         calc = Calculator(prot=bgu[0], fat=bgu[1], carbo=bgu[2], weight=massa_menu, k1=coef[0], k2=coef[1])
@@ -187,6 +163,10 @@ def execute_rashet_doza(call):
         bot.answer_callback_query(call.id, show_alert=True, text=f'Проверьте установленный вес во всех продуктах меню')
     except Exception as e:
         print(f'Ошибка - {e}')
+
+
+
+
 
 
 def smart_load_coef(teleid):
