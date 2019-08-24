@@ -150,15 +150,14 @@ def execute_rashet_doza(call):
         bgu = calculate_bgu_from_menu(my_menu)
         massa_menu = calculate_mass_my_menu(my_menu)
         coef = smart_load_coef(call.message.chat.id)
-        calc = Calculator(prot=bgu[0], fat=bgu[1], carbo=bgu[2], weight=massa_menu, k1=coef[0], k2=coef[1])
-        dose = calc.calculate_dose()
-        if dose is None:
+        if coef is None:
             bot.answer_callback_query(call.id, show_alert=True,
                                       text=f'\U00002757Расчет дозы не возможен.\n'
                                       f'Установите коэфициенты К1 и К2 в настройках')
-        else:
-            bot.answer_callback_query(call.id, show_alert=True, text=f'Доза инсулина для вашего меню \n{dose} ед.\n'
-            f'k1={coef[0]}, k2={coef[1]}')
+        calc = Calculator(prot=bgu[0], fat=bgu[1], carbo=bgu[2], weight=massa_menu, k1=coef[0], k2=coef[1])
+        dose = calc.calculate_dose()
+        bot.answer_callback_query(call.id, show_alert=True, text=f'Доза инсулина для вашего меню \n{dose} ед.\n'
+                                                                 f'k1={coef[0]}, k2={coef[1]}')
     except TypeError:
         bot.answer_callback_query(call.id, show_alert=True, text=f'Проверьте установленный вес во всех продуктах меню')
     except Exception as e:
@@ -175,6 +174,8 @@ def smart_load_coef(teleid):
     # cur_time = 1
     coef = load_coef_smart_time_from_db(teleid, cur_time)
     # print(coef)
+    if coef[0][1] == None or coef[0][2] == None or coef[1][1] == None or coef[1][2] == None:
+        return None
     k1 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][1], coef[0][1]), 2)
     k2 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][2], coef[0][2]), 2)
     return k1, k2
