@@ -272,7 +272,7 @@ def show_group_products(call):
         keyboards_array = products_group_keyboard(group_products, 'use_group')
         for i in range(len(keyboards_array)):
             keyboard.row(*keyboards_array[i])
-        keyboard.add(btn_my_menus)
+        keyboard.add(btn_calculate, btn_my_menus)
         keyboard.add(btn_doza, btn_main_menu)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='ГРУППЫ ПРОДУКТОВ', reply_markup=keyboard)
