@@ -40,7 +40,7 @@ def back_to_main_menu(call):
     try:
         main_menu(call.message.chat.id, messageId=call.message.message_id)
     except:
-        print('Somthing went wrong')
+        print('Somthing went wrong!')
 
 
 def main_menu(teleid, greeting=None, messageId=None):
