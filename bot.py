@@ -197,6 +197,7 @@ def my_menu(call):
     try:
         menu_number = load_my_menu_number(call.message.chat.id)
         menu = load_my_menu(call.message.chat.id, menu_number)
+        book_color = my_menu_book_color_switch(menu_number)
         keyboard = telebot.types.InlineKeyboardMarkup()
         kb = KeyboardMyMenu(1,1)
         keyboards_array = kb.make(menu)
@@ -206,9 +207,19 @@ def my_menu(call):
         keyboard.add(btn_my_menu_1, btn_my_menu_2, btn_my_menu_3)
         keyboard.add(btn_doza, btn_main_menu)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                              text=f'МОЕ МЕНЮ #{menu_number}', reply_markup=keyboard)
+                              text=f'МОЕ МЕНЮ #{menu_number}{book_color}', reply_markup=keyboard)
     except:
         print('oops')
+
+def my_menu_book_color_switch(menu_number):
+    """меняет цвет книжечки в зависимости от номера моего меню"""
+    if menu_number == 1:
+        book_color = '\U0001F4D5'
+    elif menu_number == 2:
+        book_color = '\U0001F4D7'
+    else:
+        book_color = '\U0001F4D8'
+    return book_color
 
 
 @bot.callback_query_handler(func=lambda call: 'My_menu_edit' in call.data)
