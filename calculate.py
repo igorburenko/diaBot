@@ -3,7 +3,11 @@ import time
 
 
 def map_from_arduino(x, in_min, in_max, out_min, out_max):
-    """функция мап как на ардуино. возвращает одно значение нужного коэфициента"""
+    """функция мап как на ардуино.
+    Получает два диапазона(in и out) и значение х  диапазона (in_min-in_max)
+    Возвращает значение соотносящееся с out_min и out_max так же как x c (in_min-in_max)
+    доработана для перехода через 24 часа при помощи ифов
+    """
     if in_min > in_max:
         in_max += 24
     if x < in_min:
@@ -16,8 +20,8 @@ def map_from_arduino(x, in_min, in_max, out_min, out_max):
 def calculate_mass_my_menu(menu):
     """Суммируем общую массу еды в меню. На входе мое меню(список кортежей), на выходе инт общая масса"""
     try:
-        listi = [sum(i) for i in zip(*menu)]
-        return listi[1]
+        massa = [sum(i) for i in zip(*menu)]
+        return massa[1]
     except:
         print('oops')
 
@@ -25,12 +29,11 @@ def calculate_mass_my_menu(menu):
 def smart_load_coef(teleid):
     timezone = db_foo.load_timezone_from_db(teleid)
     if timezone is None:
-        raise ValueError('Не установлены значения коэфициентов k1 или k2, установите их в настройках бота')
+        raise ValueError('Не установлены значения таймзоны,\nустановите ее в настройках бота')
     cur_time = db_foo.hour_from_unix_time(time.time(), timezone=timezone)
-    # cur_time = 1
     coef = db_foo.load_coef_smart_time_from_db(teleid, cur_time)
     if coef[0][1] == None or coef[0][2] == None or coef[1][1] == None or coef[1][2] == None:
-        return None
+        raise ValueError('Расчет дозы не возможен.\nУстановите коэфициенты К1 и К2 в настройках')
     k1 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][1], coef[0][1]), 2)
     k2 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][2], coef[0][2]), 2)
     return k1, k2

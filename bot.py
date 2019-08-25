@@ -145,18 +145,9 @@ def execute_rashet_doza(call):
     """Обработчик кнопки расчитать. Расчитывает дозу инсулина по продуктам в моем меню"""
     try:
         my_menu = load_my_menu(tele_id=call.message.chat.id)
-        if my_menu == []:
-            bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\nОшибка!\nДобавьте продукт\nв ваше меню!')
-            return
         bgu = calculate_bgu_from_menu(my_menu)
         massa_menu = calculate_mass_my_menu(my_menu)
-
         coef = smart_load_coef(call.message.chat.id)
-
-        if coef is None:
-            bot.answer_callback_query(call.id, show_alert=True,
-                                      text=f'\U00002757Расчет дозы не возможен.\n'
-                                      f'Установите коэфициенты К1 и К2 в настройках')
         calc = Calculator(prot=bgu[0], fat=bgu[1], carbo=bgu[2], weight=massa_menu, k1=coef[0], k2=coef[1])
         dose = calc.calculate_dose()
         bot.answer_callback_query(call.id, show_alert=True, text=f'Доза инсулина для вашего меню \n{dose} ед.\n'
@@ -173,7 +164,7 @@ def execute_rashet_doza(call):
 
 @bot.callback_query_handler(func=lambda call: 'moi_menu' in call.data)
 def my_menu(call):
-    """Показывает меню мои меню для расчета дозы инсулина"""
+    """Показывает меню моё меню"""
     try:
         menu = load_my_menu(call.message.chat.id)
         keyboard = telebot.types.InlineKeyboardMarkup()
@@ -186,6 +177,8 @@ def my_menu(call):
         keyboard.add(btn_main_menu)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='МОЕ МЕНЮ', reply_markup=keyboard)
+    except ValueError as ex:
+        bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\n{ex}')
     except:
         print('oops')
 
@@ -229,7 +222,7 @@ def delete_my_menu(call):
     try:
         delete_menu_from_db(call.message.chat.id)
         bot.answer_callback_query(call.id, show_alert=False, text=f'Меню удалено')
-        my_menu(call)
+        menu_rashet_doza(call)
     except:
         print('oops')
 
