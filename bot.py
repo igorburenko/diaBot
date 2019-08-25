@@ -15,9 +15,7 @@ bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['test'])
 def test_msg(message: Message):
-
     delete_answer(message.chat.id, message.message_id)
-
 
 
 # при команде старт
@@ -38,6 +36,7 @@ def start_msg(message: Message):
 
 @bot.callback_query_handler(func=lambda call: 'back2main_menu' in call.data)
 def back_to_main_menu(call):
+    """возврат в главное меню"""
     try:
         main_menu(call.message.chat.id, messageId=call.message.message_id)
     except:
@@ -45,20 +44,17 @@ def back_to_main_menu(call):
 
 
 def main_menu(teleid, greeting=None, messageId=None):
-    """
-    основное меню бота.
-    """
+    """основное меню бота."""
     try:
         keyboard = telebot.types.InlineKeyboardMarkup()
         keyboard.add(btn_doza, btn_setup)
-        keyboard.add(btn_add_to_base)
         keyboard.add(btn_help)
         txt = greeting + '\n ГЛАВНОЕ МЕНЮ' if greeting is not None else 'ГЛАВНОЕ МЕНЮ'
         if greeting is not None:
             txt = greeting + '\n ГЛАВНОЕ МЕНЮ'
             bot.send_message(teleid, txt, reply_markup=keyboard)
         else:
-            txt = 'ГЛАВНОЕ МЕНЮ'
+            txt = 'ДиаБот\nГЛАВНОЕ МЕНЮ'
             message_sender(teleid, messageId, keyboard, txt1=txt)
     except:
         print('Somthing went wrong')
@@ -83,6 +79,17 @@ def help_menu(call):
     keyboard.add(btn_azbuka)
     keyboard.add(btn_how_to_use)
     keyboard.add(btn_write_to_dev)
+    keyboard.add(btn_gratitude, btn_main_menu)
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                          text=text, reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: 'gratitude' in call.data)
+def gratitude_menu(call):
+    """Меню благодарности"""
+    text = help.gratitude
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    keyboard.add(btn_help)
     keyboard.add(btn_main_menu)
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                           text=text, reply_markup=keyboard)
@@ -123,7 +130,18 @@ def search_product_from_message(message: Message):
         print('oops')
 
 
-
+@bot.callback_query_handler(func=lambda call: 'add2base' in call.data)
+def add_product_to_global_db(call):
+    """Добавление пользовательского нового продукта в базу"""
+    try:
+        keyboard = telebot.types.InlineKeyboardMarkup()
+        keyboard.add(btn_write_to_dev)
+        keyboard.add(btn_main_menu)
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text='Функция пока недоступна, для добавления продукта в базу свяжитесь с разработчиком',
+                              reply_markup=keyboard)
+    except:
+        print('oopp')
 
 
 @bot.callback_query_handler(func=lambda call: 'doza' in call.data)
@@ -133,6 +151,7 @@ def menu_rashet_doza(call):
         keyboard = telebot.types.InlineKeyboardMarkup()
         keyboard.add(btn_calculate, btn_my_menus)
         keyboard.add(btn_serch_product, btn_baza_produktov)
+        keyboard.add(btn_add_to_base)
         keyboard.add(btn_main_menu)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='РАСЧЕТ ИНСУЛИНА', reply_markup=keyboard)
@@ -144,10 +163,20 @@ def menu_rashet_doza(call):
 def execute_rashet_doza(call):
     """Обработчик кнопки расчитать. Расчитывает дозу инсулина по продуктам в моем меню"""
     try:
-        my_menu = load_my_menu(tele_id=call.message.chat.id)
+        my_menu_number = load_my_menu_number(call.message.chat.id)
+        my_menu = load_my_menu(tele_id=call.message.chat.id, menu_id=my_menu_number)
+        if my_menu == []:
+            bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\nОшибка!\nДобавьте продукт\nв ваше меню!')
+            return
         bgu = calculate_bgu_from_menu(my_menu)
         massa_menu = calculate_mass_my_menu(my_menu)
+
         coef = smart_load_coef(call.message.chat.id)
+
+        if coef is None:
+            bot.answer_callback_query(call.id, show_alert=True,
+                                      text=f'\U00002757Расчет дозы не возможен.\n'
+                                      f'Установите коэфициенты К1 и К2 в настройках')
         calc = Calculator(prot=bgu[0], fat=bgu[1], carbo=bgu[2], weight=massa_menu, k1=coef[0], k2=coef[1])
         dose = calc.calculate_dose()
         bot.answer_callback_query(call.id, show_alert=True, text=f'Доза инсулина для вашего меню \n{dose} ед.\n'
@@ -164,28 +193,27 @@ def execute_rashet_doza(call):
 
 @bot.callback_query_handler(func=lambda call: 'moi_menu' in call.data)
 def my_menu(call):
-    """Показывает меню моё меню"""
+    """Показывает меню мои меню для расчета дозы инсулина"""
     try:
-        menu = load_my_menu(call.message.chat.id)
+        menu_number = load_my_menu_number(call.message.chat.id)
+        menu = load_my_menu(call.message.chat.id, menu_number)
         keyboard = telebot.types.InlineKeyboardMarkup()
         kb = KeyboardMyMenu(1,1)
         keyboards_array = kb.make(menu)
         for i in range(len(keyboards_array)):
             keyboard.add(keyboards_array[i])
         keyboard.add(btn_calculate, btn_delete_menu)
-        keyboard.add(btn_baza_produktov, btn_doza)
-        keyboard.add(btn_main_menu)
+        keyboard.add(btn_my_menu_1, btn_my_menu_2, btn_my_menu_3)
+        keyboard.add(btn_doza, btn_main_menu)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                              text='МОЕ МЕНЮ', reply_markup=keyboard)
-    except ValueError as ex:
-        bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\n{ex}')
+                              text=f'МОЕ МЕНЮ #{menu_number}', reply_markup=keyboard)
     except:
         print('oops')
 
 
 @bot.callback_query_handler(func=lambda call: 'My_menu_edit' in call.data)
 def edit_my_menu(call):
-    """Функция ввода нового веса в редактировании Мое меню. На входе 0-вызов, 1-id продукта"""
+    """Интерфейс ввода нового веса в редактировании Мое меню. На входе 0-вызов, 1-id продукта"""
     try:
         call_dat = call.data.split(',')
         prod_name = call_dat[2]
@@ -204,12 +232,22 @@ def edit_my_menu(call):
         print('oops')
 
 
+@bot.callback_query_handler(func=lambda call: 'Switch_menu' in call.data)
+def switch_menu_num(call):
+    """Переключается между тремя "Мои меню"""
+    new_menu_num = call.data.split(',')[1]
+    switch_menu_number_in_database(new_menu_num, call.message.chat.id)
+    bot.answer_callback_query(call.id, show_alert=False, text=f'Выбрано меню #{new_menu_num}')
+    my_menu(call)
+
+
 @bot.callback_query_handler(func=lambda call: 'delete_from_menu' in call.data)
 def delete_product_from_menu(call):
     """удаляет продукт из моего меню. на входе [1]-айди продукта """
     try:
         call_dat = call.data.split(',')
-        delete_product_from_my_menu_db(call.message.chat.id, call_dat[1])
+        menu_number = load_my_menu_number(call.message.chat.id)
+        delete_product_from_my_menu_db(call.message.chat.id, call_dat[1], menu_number)
         bot.answer_callback_query(call.id, show_alert=False, text=f'Продукт удален из меню')
         my_menu(call)
     except:
@@ -220,9 +258,10 @@ def delete_product_from_menu(call):
 def delete_my_menu(call):
     """стирает мое меню"""
     try:
-        delete_menu_from_db(call.message.chat.id)
+        menu_number = load_my_menu_number(call.message.chat.id)
+        delete_menu_from_db(call.message.chat.id, menu_number)
         bot.answer_callback_query(call.id, show_alert=False, text=f'Меню удалено')
-        menu_rashet_doza(call)
+        my_menu(call)
     except:
         print('oops')
 
@@ -285,7 +324,7 @@ def prod_keyboards(data, calb_name):
     try:
         keyboards_array = []
         for i in data:
-            keyboards_array.append(telebot.types.InlineKeyboardButton(text=f'{i[1]} \U0001F4AA:{int(i[2])} \U0001F43D:{int(i[3])} \U0001F36D:{int(i[4])}',
+            keyboards_array.append(telebot.types.InlineKeyboardButton(text=f'{i[1]} \U0001F4AA:{int(i[2])} \U0001F437:{int(i[3])} \U0001F36D:{int(i[4])}',
                                                               callback_data=f'{calb_name}, {i[0]}, {i[1]}'))
         return keyboards_array
     except:
@@ -294,11 +333,12 @@ def prod_keyboards(data, calb_name):
 
 @bot.callback_query_handler(func=lambda call: 'prod_for_calc' in call.data)
 def add_to_menu_ask_weight(call):
-    """добавляет продукт в базу меню и предлагает выбрать массу продукта получает 0-вызов, 1-айди продукта, 2-имя продукта"""
+    """добавляет продукт в мое меню и предлагает выбрать массу продукта получает 0-вызов, 1-айди продукта, 2-имя продукта"""
     try:
         call_dat = call.data.split(',')
         prod_id = int(call_dat[1])
-        add_new_prod_to_menu(call.message.chat.id, prod_id)
+        menu_number = load_my_menu_number(call.message.chat.id)
+        add_new_prod_to_menu(call.message.chat.id, prod_id, menu_number)
         keyboard = telebot.types.InlineKeyboardMarkup()
         kb = KeyboardWeight(4, 6)
         main_kb = kb.make(prod_id=call_dat[1])
@@ -316,7 +356,8 @@ def set_weight(call):
     """Устанавливает вес продукта в меню. Получает 0-вызов, 1-вес, 2-айди продукта"""
     try:
         call_dat = call.data.split(',')
-        set_weight_in_db(call.message.chat.id, call_dat[2], call_dat[1])
+        menu_number = load_my_menu_number(call.message.chat.id)
+        set_weight_in_db(call.message.chat.id, call_dat[2], call_dat[1], menu_number)
         bot.answer_callback_query(call.id, show_alert=False, text=f'Установлен вес {call_dat[1]} гр.')
         if call_dat[3] == 'my_menu':
             my_menu(call)
