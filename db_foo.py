@@ -171,9 +171,9 @@ def load_product_properties(prod_id):
 
 
 def add_new_prod_to_menu(tele_id, prod_id, menu_id=1):
-    """Добавляет в БД-меню продукт, """
+    """Добавляет в БД-мое-меню продукт, """
     uid = load_base_uid(tele_id)
-    if is_product_in_menu(uid, prod_id):
+    if is_product_in_menu(uid, prod_id, menu_id):
         pass
         # print("product already in base")
     else:
@@ -181,9 +181,9 @@ def add_new_prod_to_menu(tele_id, prod_id, menu_id=1):
         connect_to_db_and_action(action, False)
 
 
-def is_product_in_menu(uid, prod_id):
+def is_product_in_menu(uid, prod_id, menu_id=1):
     """Проверяет есть ли в меню продукт"""
-    action = 'SELECT id_prod FROM menu_allusers WHERE id_user = {}'.format(uid)
+    action = 'SELECT id_prod FROM menu_allusers WHERE id_user = {} AND id_menu = {}'.format(uid, menu_id)
     answer = connect_to_db_and_action(action, True)
     for i in answer:
         if i[0] == prod_id:
@@ -191,11 +191,11 @@ def is_product_in_menu(uid, prod_id):
     return False
 
 
-def set_weight_in_db(tele_id, product_id, weight):
-    # print(userid, product_id, weight)
-    """Добавляет(обновляет) вес в меню подсчета"""
+def set_weight_in_db(tele_id, product_id, weight, menu_num=1):
+    """Добавляет(обновляет) вес в моем меню"""
     userid = load_base_uid(tele_id)
-    action = "UPDATE menu_allusers SET weight = {} WHERE id_user = {} AND id_prod = {}".format(weight, userid, product_id)
+    action = "UPDATE menu_allusers SET weight = {} WHERE id_user = {} AND id_prod = {} AND id_menu = {}".format(
+                                                                                   weight, userid, product_id, menu_num)
     connect_to_db_and_action(action, False)
 
 
@@ -245,7 +245,6 @@ def load_coef_smart_time_from_db(tele_id, cur_time):
         userid = load_base_uid(tele_id)
         high_time = load_coef_from_db_for_calculate(userid, cur_time, True)
         low_time = load_coef_from_db_for_calculate(userid, cur_time, False)
-        # print(high_time, low_time)
         if high_time == []:
             cur_time -= 24
             high_time = load_coef_from_db_for_calculate(userid, cur_time, True)
@@ -268,6 +267,15 @@ def load_coef_from_db_for_calculate(userid, cur_time, flag_high):
         action2 = 'SELECT time, k1, k2 FROM coefficients WHERE userid = {} AND time <= {} ORDER BY time DESC LIMIT 1'.format(userid,
                                                                                                                      cur_time)
         coef = connect_to_db_and_action(action2, True)
-    print(coef)
     return coef
 
+
+def switch_menu_number_in_database(menu_num, teleuserid):
+    action = "UPDATE users SET menu_id = {} WHERE teleuserid = {}" .format(menu_num, teleuserid)
+    connect_to_db_and_action(action, False)
+
+
+def load_my_menu_number(teleuserid):
+    action1 = 'SELECT menu_id FROM users WHERE teleuserid = {} '.format(teleuserid)
+    coef = connect_to_db_and_action(action1, True)
+    return coef[0][0]
