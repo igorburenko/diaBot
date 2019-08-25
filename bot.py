@@ -38,35 +38,34 @@ def start_msg(message: Message):
 def back_to_main_menu(call):
     """возврат в главное меню"""
     try:
-        main_menu(call.message.chat.id, messageId=call.message.message_id)
+        main_menu(call.message.chat.id, message_id=call.message.message_id)
     except:
         print('Somthing went wrong')
 
 
-def main_menu(teleid, greeting=None, messageId=None):
+def main_menu(teleid, greeting=None, message_id=None):
     """основное меню бота."""
     try:
         keyboard = telebot.types.InlineKeyboardMarkup()
         keyboard.add(btn_doza, btn_setup)
         keyboard.add(btn_help)
-        txt = greeting + '\n ГЛАВНОЕ МЕНЮ' if greeting is not None else 'ГЛАВНОЕ МЕНЮ'
         if greeting is not None:
             txt = greeting + '\n ГЛАВНОЕ МЕНЮ'
             bot.send_message(teleid, txt, reply_markup=keyboard)
         else:
             txt = 'ДиаБот\nГЛАВНОЕ МЕНЮ'
-            message_sender(teleid, messageId, keyboard, txt1=txt)
+            message_sender(teleid, message_id, keyboard, txt1=txt)
     except:
         print('Somthing went wrong')
 
 
-def message_sender(chatId, messageId, replyMarkup, txt1='', txt2=''):
+def message_sender(chat_id, message_id, reply_markup, txt1='', txt2=''):
     """
     отправляет сообщение пользователю через эдит предыдущего сообщения
     """
     try:
-        bot.edit_message_text(chat_id=chatId, message_id=messageId,
-                          text=txt1+txt2, reply_markup=replyMarkup)
+        bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                              text=txt1+txt2, reply_markup=reply_markup)
     except:
         print('Somthing went wrong!')
 
@@ -93,7 +92,6 @@ def gratitude_menu(call):
     keyboard.add(btn_main_menu)
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                           text=text, reply_markup=keyboard)
-
 
 
 @bot.callback_query_handler(func=lambda call: 'serch_in_products' in call.data)

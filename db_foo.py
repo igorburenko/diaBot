@@ -201,10 +201,15 @@ def set_weight_in_db(tele_id, product_id, weight, menu_num=1):
 
 def load_my_menu(tele_id, menu_id='1'):
     """Загружает мои меню из базы данных, возвращает список кортежей - продукт ИД, вес"""
-    userid = load_base_uid(tele_id)
-    action = 'SELECT id_prod, weight FROM menu_allusers WHERE id_user = {} AND id_menu = {}'.format(userid, menu_id)
+    # userid = load_base_uid(tele_id)
+    action = 'SELECT id_prod, weight ' \
+             'FROM users INNER JOIN menu_allusers ON users.id = menu_allusers.id_user ' \
+             'WHERE teleuserid = {} AND id_menu = {}'.format(tele_id, menu_id)
+    # action = 'SELECT id_prod, weight FROM menu_allusers WHERE id_user = {} AND id_menu = {}'.format(userid, menu_id)
     answer = connect_to_db_and_action(action, True)
     return answer
+
+
 
 
 def load_product_name_from_product_id(product_id):
