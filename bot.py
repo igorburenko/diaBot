@@ -15,9 +15,7 @@ bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['test'])
 def test_msg(message: Message):
-
     delete_answer(message.chat.id, message.message_id)
-
 
 
 # при команде старт
@@ -45,9 +43,7 @@ def back_to_main_menu(call):
 
 
 def main_menu(teleid, greeting=None, messageId=None):
-    """
-    основное меню бота.
-    """
+    """основное меню бота."""
     try:
         keyboard = telebot.types.InlineKeyboardMarkup()
         keyboard.add(btn_doza, btn_setup)
@@ -58,7 +54,7 @@ def main_menu(teleid, greeting=None, messageId=None):
             txt = greeting + '\n ГЛАВНОЕ МЕНЮ'
             bot.send_message(teleid, txt, reply_markup=keyboard)
         else:
-            txt = 'ГЛАВНОЕ МЕНЮ'
+            txt = 'ДиаБот\nГЛАВНОЕ МЕНЮ'
             message_sender(teleid, messageId, keyboard, txt1=txt)
     except:
         print('Somthing went wrong')
