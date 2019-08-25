@@ -95,9 +95,10 @@ def execute_button_search(call):
     try:
         keyboard = telebot.types.InlineKeyboardMarkup()
         keyboard.add(btn_doza, btn_main_menu)
-        message = bot.send_message(chat_id=call.message.chat.id, text='Отправьте первые 2-4 буквы нужного продукта')
+        txt = 'Отправьте первые 2-4 буквы нужного продукта'
+        message = bot.send_message(chat_id=call.message.chat.id, text=txt)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=message.message_id,
-                              text='Отправьте первые 2-4 буквы нужного продукта', reply_markup=keyboard)
+                              text=txt, reply_markup=keyboard)
         delete_answer(call.message.chat.id, call.message.message_id)
     except:
         print('oops')
@@ -149,7 +150,9 @@ def execute_rashet_doza(call):
             return
         bgu = calculate_bgu_from_menu(my_menu)
         massa_menu = calculate_mass_my_menu(my_menu)
+
         coef = smart_load_coef(call.message.chat.id)
+
         if coef is None:
             bot.answer_callback_query(call.id, show_alert=True,
                                       text=f'\U00002757Расчет дозы не возможен.\n'
@@ -158,27 +161,14 @@ def execute_rashet_doza(call):
         dose = calc.calculate_dose()
         bot.answer_callback_query(call.id, show_alert=True, text=f'Доза инсулина для вашего меню \n{dose} ед.\n'
                                                                  f'k1={coef[0]}, k2={coef[1]}')
+    except ValueError as ex:
+        bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\nОшибка!\n{ex}')
     except TypeError:
-        bot.answer_callback_query(call.id, show_alert=True, text=f'Проверьте установленный вес во всех продуктах меню')
+        bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\nОшибка!\n'
+        f'Проверьте установленный вес во всех продуктах меню,\n'
+        f'установлены ли коэфициенты k1, k2 и time зона в настройках бота')
     except Exception as e:
         print(f'Ошибка - {e}')
-
-
-
-
-
-
-def smart_load_coef(teleid):
-    timezone = load_timezone_from_db(teleid)
-    cur_time = hour_from_unix_time(time.time(), timezone=timezone)
-    # cur_time = 1
-    coef = load_coef_smart_time_from_db(teleid, cur_time)
-    # print(coef)
-    if coef[0][1] == None or coef[0][2] == None or coef[1][1] == None or coef[1][2] == None:
-        return None
-    k1 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][1], coef[0][1]), 2)
-    k2 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][2], coef[0][2]), 2)
-    return k1, k2
 
 
 @bot.callback_query_handler(func=lambda call: 'moi_menu' in call.data)
@@ -438,8 +428,8 @@ def my_coef_menu(call):
         keyboard.add(btn_setup, btn_main_menu)
         # bot.send_message(chat_id=message.chat.id, text=txt, reply_markup=keyboard)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=txt, reply_markup=keyboard)
-    except:
-        print('Somthing went wrong')
+    except Exception as ex:
+        print(ex)
 
 
 @bot.callback_query_handler(func=lambda call: 'set_new_coef' in call.data)

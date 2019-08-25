@@ -109,28 +109,6 @@ def add_coefficient(tele_id, coef_time, coef_name='k1', coef_val='NULL'):
     return coef_id
 
 
-def read_coefficient_from_db(teleid, time):
-    """
-    На вход получает id пользователя в телеге и текущее UNIX время
-    Возвращает кортеж коэфициентов (k1, k2, цеи, telegram id)
-    используется для расчета дозы
-    """
-    userid = load_base_uid(teleid)
-    time_lst = load_base_coef_time(userid)
-    hour = hour_from_unix_time(time, 3)
-    print(f'использованы {hour} часа')
-    tm = 0
-    for t in time_lst:
-        if t[0] <= hour and t[0] >= tm:
-            tm = t[0]
-    print(f'я подобрал ближайшие коэфициенты на {tm} часов')
-    action = 'SELECT k1, k2, k3 FROM coefficients WHERE time = {}'.format(tm)
-    answer = connect_to_db_and_action(action, True)
-    forreturn = [i for i in answer[0]]
-    forreturn.append(teleid)
-    return forreturn
-
-
 def read_all_coefficient_from_db(teleid):
     """
     для расчета дозы
@@ -141,6 +119,7 @@ def read_all_coefficient_from_db(teleid):
     userid = load_base_uid(teleid)
     action = 'SELECT time, k1, k2, k3 FROM coefficients WHERE userid = {}'.format(userid)
     answer = connect_to_db_and_action(action, True)
+    # print(answer)
     return answer
 
 
@@ -266,12 +245,14 @@ def load_coef_smart_time_from_db(tele_id, cur_time):
         userid = load_base_uid(tele_id)
         high_time = load_coef_from_db_for_calculate(userid, cur_time, True)
         low_time = load_coef_from_db_for_calculate(userid, cur_time, False)
+        # print(high_time, low_time)
         if high_time == []:
             cur_time -= 24
             high_time = load_coef_from_db_for_calculate(userid, cur_time, True)
         elif low_time == []:
             cur_time += 24
             low_time = load_coef_from_db_for_calculate(userid, cur_time, False)
+
         high_time.append(low_time[0])
         return high_time
 
@@ -287,5 +268,6 @@ def load_coef_from_db_for_calculate(userid, cur_time, flag_high):
         action2 = 'SELECT time, k1, k2 FROM coefficients WHERE userid = {} AND time <= {} ORDER BY time DESC LIMIT 1'.format(userid,
                                                                                                                      cur_time)
         coef = connect_to_db_and_action(action2, True)
+    print(coef)
     return coef
 

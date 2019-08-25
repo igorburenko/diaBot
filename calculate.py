@@ -1,4 +1,5 @@
-from db_foo import load_my_menu, load_product_properties
+import db_foo
+import time
 
 
 def map_from_arduino(x, in_min, in_max, out_min, out_max):
@@ -15,10 +16,24 @@ def map_from_arduino(x, in_min, in_max, out_min, out_max):
 def calculate_mass_my_menu(menu):
     """Суммируем общую массу еды в меню. На входе мое меню(список кортежей), на выходе инт общая масса"""
     try:
-        list = [sum(i) for i in zip(*menu)]
-        return list[1]
+        listi = [sum(i) for i in zip(*menu)]
+        return listi[1]
     except:
         print('oops')
+
+
+def smart_load_coef(teleid):
+    timezone = db_foo.load_timezone_from_db(teleid)
+    if timezone is None:
+        raise ValueError('Не установлены значения коэфициентов k1 или k2, установите их в настройках бота')
+    cur_time = db_foo.hour_from_unix_time(time.time(), timezone=timezone)
+    # cur_time = 1
+    coef = db_foo.load_coef_smart_time_from_db(teleid, cur_time)
+    if coef[0][1] == None or coef[0][2] == None or coef[1][1] == None or coef[1][2] == None:
+        return None
+    k1 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][1], coef[0][1]), 2)
+    k2 = round(map_from_arduino(cur_time, coef[1][0], coef[0][0], coef[1][2], coef[0][2]), 2)
+    return k1, k2
 
 
 def calculate_bgu_from_menu(my_menu):
@@ -26,7 +41,7 @@ def calculate_bgu_from_menu(my_menu):
     data_for_calculate = []
     for i in my_menu:
         cell_data_calculate = []
-        prod_prop = load_product_properties(i[0])  # Получаем БЖУ продуктов из базы списком кортежей
+        prod_prop = db_foo.load_product_properties(i[0])  # Получаем БЖУ продуктов из базы списком кортежей
         for p in prod_prop[0]:
             bgu_v_menu_konkretnogo_producta = i[1] / 100 * p  # Расчитываем по очереди БЖУ в меню по массе продукта
             cell_data_calculate.append(
