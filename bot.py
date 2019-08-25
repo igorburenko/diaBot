@@ -36,6 +36,7 @@ def start_msg(message: Message):
 
 @bot.callback_query_handler(func=lambda call: 'back2main_menu' in call.data)
 def back_to_main_menu(call):
+    """возврат в главное меню"""
     try:
         main_menu(call.message.chat.id, messageId=call.message.message_id)
     except:
