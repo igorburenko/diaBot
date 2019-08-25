@@ -68,7 +68,7 @@ def message_sender(chatId, messageId, replyMarkup, txt1='', txt2=''):
         bot.edit_message_text(chat_id=chatId, message_id=messageId,
                           text=txt1+txt2, reply_markup=replyMarkup)
     except:
-        print('Somthing went wrong')
+        print('Somthing went wrong!')
 
 
 @bot.callback_query_handler(func=lambda call: 'help' in call.data)
