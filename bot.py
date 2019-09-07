@@ -8,6 +8,17 @@ from calculate import *
 from buttons import *
 from keyboards import KeyboardEditTimeCoef, KeyboardWeight, KeyboardMyMenu
 from pprint import pprint
+# from flask import Flask
+#
+#
+# app = Flask(__name__)
+#
+# @app.route('/')
+# def home():
+#     return 'Привет я Диабот.'
+#
+# if __name__ == '__main__':
+#     app.run()
 
 TOKEN = os.getenv("TOKEN")
 
@@ -162,12 +173,12 @@ def execute_rashet_doza(call):
     """Обработчик кнопки расчитать. Расчитывает дозу инсулина по продуктам в моем меню"""
     try:
         my_menu_number = load_my_menu_number(call.message.chat.id)
-        my_menu = load_my_menu(tele_id=call.message.chat.id, menu_id=my_menu_number)
-        if my_menu == []:
+        my_menus = load_my_menu(tele_id=call.message.chat.id, menu_id=my_menu_number)
+        if my_menus == []:
             bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\nОшибка!\nДобавьте продукт\nв ваше меню!')
             return
-        bgu = calculate_bgu_from_menu(my_menu)
-        massa_menu = calculate_mass_my_menu(my_menu)
+        bgu = calculate_bgu_from_menu(my_menus)
+        massa_menu = calculate_mass_my_menu(my_menus)
 
         coef = smart_load_coef(call.message.chat.id)
 
@@ -177,8 +188,10 @@ def execute_rashet_doza(call):
                                       f'Установите коэфициенты К1 и К2 в настройках')
         calc = Calculator(prot=bgu[0], fat=bgu[1], carbo=bgu[2], weight=massa_menu, k1=coef[0], k2=coef[1])
         dose = calc.calculate_dose()
+
         bot.answer_callback_query(call.id, show_alert=True, text=f'Доза инсулина для вашего меню \n{dose} ед.\n'
                                                                  f'k1={coef[0]}, k2={coef[1]}')
+        my_menu(call)
     except ValueError as ex:
         bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\nОшибка!\n{ex}')
     except TypeError:
