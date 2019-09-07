@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	  <!-- Required meta tags -->
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	 	<!-- Bootstrap CSS -->
+	  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+		<link rel="stylesheet" href="site/style.css">
+		<title>ДиаБот::Главная</title>
+	</head>
+
+	<body>
+		<!-- Навигация -->
+		<section>
+			<div class="img"></div>
+			<div class="container">
+			  <nav class="navbar skruglenie navbar-expand-sm shadow-lg navbar-light bg-light">
+			  	<a class="navbar-brand" href="#">
+			   	 <img src="site/dia_logo.png" width="30" height="30" class="d-inline-block align-top" alt="">
+						ДиаБот
+					</a>
+				  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+				    <span class="navbar-toggler-icon"></span>
+				  </button>
+			 		<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+			   		<div class="navbar-nav ml-auto">
+				      <!-- <a class="nav-item nav-link active" href="#">Home <span class="sr-only">(current)</span></a> -->
+				      <a class="nav-item nav-link"  href="#">Главная</a>
+				      <a class="nav-item nav-link" href="#new-product">Новый продукт</a>
+				      <a class="nav-item nav-link" href="#help">Помощь</a>
+			   		</div>
+			  	</div>
+				</nav>
+			</div>
+			<!-- Основная информация -->
+			<div class="container">
+
+					<div class="jumbotron">
+					  <h1 class="greating text-center">Привет, я ДиаБот!</h1>
+					  <hr class="my-4">	
+					  <p class="lead text-center">У меня есть большая база продуктов,<br>и я умею расчитывать дозу инсулина.</p>
+
+					  <!-- <p class="text-center">Мной пользоваться довольно просто.<br>Но перед тем как начать надо расчитать несколько ваших индивидуальных коэфициентов и установить временную зону.</p> -->
+					</div>
+	
+			</div>
+		</section>
+
+		<!-- Второй блок на три колонки -->
+		<div class="container trikolonki">
+		  <div class="row">
+		    <div class="col-sm">
+		      <p class="trikolonki_text">Мной пользоваться довольно просто. Но перед тем как начать, надо расчитать несколько ваших индивидуальных коэфициентов и установить временную зону. Отсюда естественно следует, что автоматизация дискредитирует предмет деятельности. Согласно мнению известных философов, дедуктивный метод естественно порождает и обеспечивает мир, tertium nоn datur. Апостериори, гравитационный парадокс</p>
+		    </div>
+		    <div class="col-sm">
+		      <p class="trikolonki_text">Вторая колонка с распиздатым текстом. Тут будет описано еще чтото об охуенности. Этот текст не прочитает никто даже если он будет очень интересным. Отсюда естественно следует, что автоматизация дискредитирует предмет деятельности. Согласно мнению известных философов, дедуктивный метод естественно порождает и обеспечивает мир, tertium nоn datur.</p>
+		    </div>
+		    <div class="col-sm">
+		      <p class="trikolonki_text">Аксиома силлогизма, по определению, представляет собой неоднозначный предмет деятельности. Надстройка нетривиальна. Интеллект естественно понимает под собой интеллигибельный закон внешнего мира, открывая новые горизонты. Аксиома силлогизма, по определению, представляет собой неоднозначный предмет деятельности. Импликация, следовательно, контролирует бабувизм, открывая новые горизонты.</p>
+		    </div>
+		  </div>
+		</div>
+
+	<!-- Добавление продукта в базу -->
+
+	<div class="container">
+		<p><a name="new-product"></a></p> 
+		<h1 class="greating text-center text_opacity">Добавление нового продукта в базу</h1>
+		<hr class="my-3">
+		<p class="lead text-center add-base_led text_opacity">Чтобы добавить новый продукт в базу ДиаБота заполните форму ниже</p>
+		<form class="needs-validation" novalidate>
+		  <div class="form-row">
+		    <div class="col-md-12 mb-4">
+		      <label for="validationTooltip01">Название продукта</label>
+		      <input type="text" class="form-control" id="validationTooltip01" placeholder="Название продукта" required>
+		      <div class="invalid-tooltip">
+		        Укажите название продукта.
+		      </div>
+		    </div>
+		  </div>
+		  <div class="form-row">
+		    <div class="col-md-4 mb-4">
+		      <label for="validationTooltip02">Белки</label>
+		      <input type="number" class="form-control" id="validationTooltip02" placeholder="Введите число" required>
+		      <div class="invalid-tooltip">
+		        Ошибка
+		      </div>
+		    </div>
+		    <div class="col-md-4 mb-4">
+		      <label for="validationTooltip03">Жиры</label>
+		      <input type="number" class="form-control" id="validationTooltip03" placeholder="Введите число" required>
+		      <div class="invalid-tooltip">
+		        Ошибка
+		      </div>
+		    </div>
+		 		<div class="col-md-4 mb-4">
+		      <label for="validationTooltip04">Углеводы</label>
+		      <input type="number" class="form-control" id="validationTooltip04" placeholder="Введите число" required>
+		      <div class="invalid-tooltip">
+		        Ошибка
+		      </div>
+		    </div>
+		  </div>
+		  <button class="btn btn-primary" type="submit">Добавить продукт</button>
+		</form>
+	</div>
+
+	<!-- Помощь -->
+
+
+		<div class="container mt-5">
+			<p><a name="help"></a></p> 
+			<h1 class="greating text-center text_opacity">Помощь по работе с ботом</h1>
+			<hr class="my-3">
+			<p class="lead text-center add-base_led text_opacity">В этом разделе несколько видео показывающих как работать с ботом</p>
+		
+			<div class="embed-responsive embed-responsive-16by9">
+			  <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/FK1aPXaI0FQ?rel=0" allowfullscreen></iframe>
+			</div>
+		</div>
+
+		<!-- Подвал -->
+		<div class="container"><hr class="my-4 minus_mb">	</div>
+		<div class="container">
+		  <nav class="navbar navbar-expand-sm podval navbar-light">
+		   		<div class="navbar-nav podval_nav mx-auto">
+			      <a class="nav-item podval_text nav-link"  href="#">Главная</a>
+			      <a class="nav-item ml-3 podval_text nav-link" href="#new-product">Новый продукт</a>
+			      <a class="nav-item ml-3 podval_text nav-link" href="#help">Помощь</a>
+		   		</div>
+		  	</div>
+			</nav>
+		</div>
+	    <!-- Optional JavaScript -->
+	    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+	  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	  <script>
+// Example starter JavaScript for disabling form submissions if there are invalid fields
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.getElementsByClassName('needs-validation');
+    // Loop over them and prevent submission
+    var validation = Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+})();
+</script>
+	</body>
+</html>
