@@ -8,17 +8,17 @@ from calculate import *
 from buttons import *
 from keyboards import KeyboardEditTimeCoef, KeyboardWeight, KeyboardMyMenu
 from pprint import pprint
-# from flask import Flask
-#
-#
-# app = Flask(__name__)
-#
-# @app.route('/')
-# def home():
-#     return 'Привет я Диабот.'
-#
-# if __name__ == '__main__':
-#     app.run()
+from flask import Flask
+
+
+app = Flask(__name__)
+
+@app.route('/index')
+def home():
+    return 'Привет я Диабот.'
+
+if __name__ == '__main__':
+    app.run()
 
 TOKEN = os.getenv("TOKEN")
 
