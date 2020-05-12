@@ -191,7 +191,7 @@ def execute_rashet_doza(call):
 
         bot.answer_callback_query(call.id, show_alert=True, text=f'Доза инсулина для вашего меню \n{dose} ед.\n'
                                                                  f'k1={coef[0]}, k2={coef[1]}\n'
-                                                                 f'Углеводов={bgu[2]}')
+                                                                 f'Углеводов={round(bgu[2], 1)}')
         my_menu(call)
     except ValueError as ex:
         bot.answer_callback_query(call.id, show_alert=True, text=f'\U00002757\nОшибка!\n{ex}')
